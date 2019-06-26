@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+	<div>
+		用户名称:<input type="text" id="user" placeholder="输入用户名" class="input" /><input type="button" id="login" value="登录" class="btn btn-sm btn-info" /><br />
+		接收人：<input type="text" id="receiveUser" placeholder="接收人(不填默认群发)" class="input" /><br />
+		<input type="text" id="content" placeholder="发送内容" class="input" /> &nbsp;&nbsp;<input type="button" value="发送" class="btn btn-sm btn-info" id="send" />
+		<div>
+			<h4>接收到的信息：</h4>
+			<ul id="dataContainer"></ul>
+		</div>
+	</div>
+	<script src="Scripts/jquery-3.3.1.min.js"></script>
+	<script src="Scripts/jquery.signalR-2.4.1.min.js"></script>
+	<script src="signalr/hubs"></script>
+	<script language="javascript">
+		$(function () {
+			var chat = $.connection.pushHub;
+			
+			console.log(chat);
+			//连接服务端集线器，demoHub为服务端集线器名称，js上首字母须改为小写（系统默认）
+			//定义客户端方法，此客户端方法必须与服务端集线器中的方法名称、参数均一致。
+			//实际上是服务端调用了前端的js方法（订阅）
+			//若多个参数，服务端也需要一致
+
+			chat.client.show = function (content) {
+				var html = '<li>' + htmlEncode(content) + "</li>";
+				$("#dataContainer").append(html);
+			}
+
+			//定义推送
+			$.connection.hub.start()
+				.done(function () {
+					$("#login").click(function () {
+						chat.server.login($("#user").val());  //将客户端的content内容发送到服务端
+						$("#user").val("");
+					});
+					$("#send").click(function () {
+						chat.server.show($("#content").val(), $("#receiveUser").val());  //将客户端的content内容发送到服务端
+						$("#content").val("");
+					});
+				});
+
+
+		});
+		//编码
+		function htmlEncode(value) {
+			var encodedValue = $('<div />').text(value).html();
+			return encodedValue;
+		}
+	</script>
+</body>
+
+</html>
